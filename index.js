@@ -29,7 +29,7 @@ const imageSchema = new mongoose.Schema({
   },
   expiresAt: {
     type: Date,
-    index: { expires: '3d' } // Index for automatic expiration after 3 days
+    index: { expires: '3d' } 
   }
 });
 
@@ -38,7 +38,6 @@ const Image = mongoose.model('Image', imageSchema);
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// Schedule job to clean up expired images every day
 schedule.scheduleJob('0 0 * * *', async () => {
   try {
     const result = await Image.deleteMany({ expiresAt: { $lt: new Date() } });
@@ -48,7 +47,7 @@ schedule.scheduleJob('0 0 * * *', async () => {
   }
 });
 
-app.use(express.urlencoded({ extended: true })); // Parse form data
+app.use(express.urlencoded({ extended: true })); 
 
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
@@ -61,7 +60,7 @@ app.post('/upload', upload.single('image'), async (req, res) => {
       _id: id,
       data: req.file.buffer,
       contentType: req.file.mimetype,
-      expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) // Set expiration time to 3 days from now
+      expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) 
     });
     await newImage.save();
 
@@ -107,9 +106,8 @@ app.get('/admin/images', async (req, res) => {
   }
 });
 
-// Function to format date in a human-readable format
 function formatDate(date) {
-  return date.toLocaleString(); // You can customize the format based on your requirements
+  return date.toLocaleString(); 
 }
 
 app.post('/admin/images/delete', async (req, res) => {
