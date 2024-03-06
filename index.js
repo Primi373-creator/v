@@ -12,6 +12,7 @@ const mongoose = require('mongoose');
 const multer = require('multer');
 const uuid = require('uuid');
 const schedule = require('node-schedule');
+const axios = require('axios');
 
 const app = express();
 const PORT = process.env.PORT || 3076;
@@ -53,6 +54,42 @@ app.use(express.urlencoded({ extended: true }));
 
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
+});
+
+app.all('/upload-url', async (req, res) => {
+  if (req.method === 'GET') {
+    // Return an HTML form for GET requests
+    res.sendFile(__dirname + '/upload-url.html');
+  } else if (req.method === 'POST') {
+    // Handle POST requests for uploading image from URL
+    try {
+      const imageUrl = req.body.imageUrl || req.query.imageUrl;
+
+      if (!imageUrl) {
+        res.status(400).send('Image URL is required');
+        return;
+      }
+
+      // Fetch the image from the URL
+      const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+      const imageData = Buffer.from(response.data, 'binary');
+
+      // Save the image to the database
+      const id = uuid.v4();
+      const newImage = new Image({
+        _id: id,
+        data: imageData,
+        contentType: response.headers['content-type'],
+        expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) 
+      });
+      await newImage.save();
+
+      res.send(`Image uploaded successfully! ID: ${id}`);
+    } catch (error) {
+      console.error('Error uploading image from URL:', error);
+      res.status(500).send('Error uploading image');
+    }
+  }
 });
 
 app.all('/upload', upload.single('image'), async (req, res) => {
