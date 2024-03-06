@@ -5,7 +5,7 @@
   'mongodb+srv://uploader4:uploader4@uploader4.qpxbp5y.mongodb.net/?retryWrites=true&w=majority&appName=uploader4',
   'mongodb+srv://uploader5:uploader5@uploader5.6xmi6ph.mongodb.net/?retryWrites=true&w=majority&appName=uploader5',
 ];*/
-const DOMAIN_NAME = 'yourdomain.com'; // Replace 'yourdomain.com' with your actual domain name
+const DOMAIN_NAME = 'files.alpha-md.rf.gd'; // Replace 'yourdomain.com' with your actual domain name
 
 const express = require('express');
 const mongoose = require('mongoose');
