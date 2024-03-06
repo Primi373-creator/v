@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Interface</title>
+</head>
+<body>
+  <h1>Admin Interface</h1>
+  <form action="/admin/images/delete" method="post">
+    <label for="imageId">Image ID to Delete:</label>
+    <input type="text" id="imageId" name="imageId" required>
+    <input type="hidden" name="adminKey" value="alpha">
+    <button type="submit">Delete Image</button>
+  </form>
+  <ul>
+    <li><a href="/admin/images">View All Images</a></li>
+    <li><a href="/admin/images/all">Delete All Images</a></li>
+  </ul>
+</body>
+</html>

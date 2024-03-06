@@ -8,18 +8,29 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const multer = require('multer');
+const uuid = require('uuid');
+const schedule = require('node-schedule');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-mongoose.connect('mongodb+srv://uploader5:uploader5@uploader5.6xmi6ph.mongodb.net/?retryWrites=true&w=majority&appName=uploader5', {
+mongoose.connect('mongodb+srv://uploader5:uploader5@uploader5.6xmi6ph.mongodb.net/imageStore?retryWrites=true&w=majority', {
   useNewUrlParser: true,
   useUnifiedTopology: true
 });
 
 const imageSchema = new mongoose.Schema({
+  _id: String,
   data: Buffer,
-  contentType: String
+  contentType: String,
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  expiresAt: {
+    type: Date,
+    index: { expires: '3d' } // Index for automatic expiration after 3 days
+  }
 });
 
 const Image = mongoose.model('Image', imageSchema);
@@ -27,19 +38,34 @@ const Image = mongoose.model('Image', imageSchema);
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
+// Schedule job to clean up expired images every day
+schedule.scheduleJob('0 0 * * *', async () => {
+  try {
+    const result = await Image.deleteMany({ expiresAt: { $lt: new Date() } });
+    console.log(`Deleted ${result.deletedCount} expired images`);
+  } catch (error) {
+    console.error('Error deleting expired images:', error);
+  }
+});
+
+app.use(express.urlencoded({ extended: true })); // Parse form data
+
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
 app.post('/upload', upload.single('image'), async (req, res) => {
   try {
+    const id = uuid.v4();
     const newImage = new Image({
+      _id: id,
       data: req.file.buffer,
-      contentType: req.file.mimetype
+      contentType: req.file.mimetype,
+      expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) // Set expiration time to 3 days from now
     });
     await newImage.save();
 
-    res.send('Image uploaded successfully!');
+    res.send(`Image uploaded successfully! ID: ${id}`);
   } catch (error) {
     res.status(500).send('Error uploading image');
   }
@@ -55,11 +81,44 @@ app.get('/images/:id', async (req, res) => {
       return;
     }
 
-    // Send the image data as a response
     res.contentType(image.contentType);
     res.send(image.data);
   } catch (error) {
     res.status(500).send('Error retrieving image');
+  }
+});
+
+app.get('/admin', (req, res) => {
+  res.sendFile(__dirname + '/admin.html');
+});
+
+app.get('/admin/images', async (req, res) => {
+  try {
+    const images = await Image.find({}, { _id: 1, createdAt: 1, expiresAt: 1 });
+    const formattedImages = images.map(image => ({
+      _id: image._id,
+      createdAt: formatDate(image.createdAt),
+      expiresAt: formatDate(image.expiresAt)
+    }));
+
+    res.json(formattedImages);
+  } catch (error) {
+    res.status(500).send('Error retrieving images');
+  }
+});
+
+// Function to format date in a human-readable format
+function formatDate(date) {
+  return date.toLocaleString(); // You can customize the format based on your requirements
+}
+
+app.post('/admin/images/delete', async (req, res) => {
+  try {
+    const imageId = req.body.imageId;
+    await Image.findByIdAndDelete(imageId);
+    res.send(`Image with ID ${imageId} deleted successfully`);
+  } catch (error) {
+    res.status(500).send('Error deleting image');
   }
 });
 
