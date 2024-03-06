@@ -5,6 +5,8 @@
   'mongodb+srv://uploader4:uploader4@uploader4.qpxbp5y.mongodb.net/?retryWrites=true&w=majority&appName=uploader4',
   'mongodb+srv://uploader5:uploader5@uploader5.6xmi6ph.mongodb.net/?retryWrites=true&w=majority&appName=uploader5',
 ];*/
+const DOMAIN_NAME = 'yourdomain.com'; // Replace 'yourdomain.com' with your actual domain name
+
 const express = require('express');
 const mongoose = require('mongoose');
 const multer = require('multer');
@@ -53,7 +55,7 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
-app.post('/upload', upload.single('image'), async (req, res) => {
+app.all('/upload', upload.single('image'), async (req, res) => {
   try {
     const id = uuid.v4();
     const newImage = new Image({
@@ -70,7 +72,7 @@ app.post('/upload', upload.single('image'), async (req, res) => {
   }
 });
 
-app.get('/images/:id', async (req, res) => {
+app.all('/images/:id', async (req, res) => {
   try {
     const imageId = req.params.id;
     const image = await Image.findById(imageId);
@@ -91,7 +93,7 @@ app.get('/admin', (req, res) => {
   res.sendFile(__dirname + '/admin.html');
 });
 
-app.get('/admin/images', async (req, res) => {
+app.all('/admin/images', async (req, res) => {
   try {
     const images = await Image.find({}, { _id: 1, createdAt: 1, expiresAt: 1 });
     const formattedImages = images.map(image => ({
@@ -110,7 +112,7 @@ function formatDate(date) {
   return date.toLocaleString(); 
 }
 
-app.post('/admin/images/delete', async (req, res) => {
+app.all('/admin/images/delete', async (req, res) => {
   try {
     const imageId = req.body.imageId;
     await Image.findByIdAndDelete(imageId);
@@ -121,5 +123,5 @@ app.post('/admin/images/delete', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server is running on http://${DOMAIN_NAME}:${PORT}`);
 });
