@@ -12,7 +12,7 @@ const uuid = require('uuid');
 const schedule = require('node-schedule');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3076;
 
 mongoose.connect('mongodb+srv://uploader5:uploader5@uploader5.6xmi6ph.mongodb.net/imageStore?retryWrites=true&w=majority', {
   useNewUrlParser: true,
